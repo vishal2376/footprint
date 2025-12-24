@@ -32,6 +32,9 @@ kotlin {
 
 	        // ktor
 	        implementation(libs.ktor.client.android)
+
+            // koin
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -49,6 +52,11 @@ kotlin {
 
 	        // mapcompose for tile maps
 	        implementation(libs.mapcompose.mp)
+
+            // koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
 
 	    iosMain.dependencies {
