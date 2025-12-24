@@ -23,6 +23,10 @@ class IOSLocationDataSource : LocationDataSource {
             
             val delegate = object : NSObject(), CLLocationManagerDelegateProtocol {
                 override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
+                    manager.stopUpdatingLocation()
+                    
+                    if (!continuation.isActive) return
+                    
                     val clLocation = didUpdateLocations.lastOrNull() as? CLLocation
                     if (clLocation != null) {
                         clLocation.coordinate.useContents {
@@ -34,10 +38,13 @@ class IOSLocationDataSource : LocationDataSource {
                             )
                         }
                     }
-                    manager.stopUpdatingLocation()
                 }
                 
                 override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {
+                    manager.stopUpdatingLocation()
+                    
+                    if (!continuation.isActive) return
+                    
                     continuation.resumeWithException(Exception(didFailWithError.localizedDescription))
                 }
             }
