@@ -1,60 +1,110 @@
 package com.nullappstudios.footprint
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.nullappstudios.footprint.presentation.viewmodel.LocationViewModel
+import com.nullappstudios.footprint.presentation.viewmodel.MapViewModel
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
+import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.centerOnMarker
+import ovh.plrapps.mapcompose.ui.MapUI
+import footprint.composeapp.generated.resources.Res
+import footprint.composeapp.generated.resources.compose_multiplatform
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.ln
+import kotlin.math.tan
 
 @Composable
 @Preview
 fun App() {
-    val viewModel: LocationViewModel = koinViewModel()
+    val viewModel: MapViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
+    
+    LaunchedEffect(uiState.currentLocation) {
+        uiState.currentLocation?.let { location ->
+            val x = (location.longitude + 180.0) / 360.0
+            val latRad = location.latitude * PI / 180.0
+            val y = (1.0 - ln(tan(latRad) + 1.0 / cos(latRad)) / PI) / 2.0
+            
+            viewModel.mapState.addMarker(
+                id = "user_location",
+                x = x,
+                y = y
+            ) {
+                LocationMarker()
+            }
+            viewModel.mapState.centerOnMarker("user_location", destScale = 1.0)
+        }
+    }
     
     MaterialTheme {
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Button(onClick = { viewModel.fetchLocation() }) {
-                Text("Get Location")
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator()
-                }
-                uiState.error != null -> {
-                    Text(
-                        text = "Error: ${uiState.error}",
-                        color = MaterialTheme.colorScheme.error
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { viewModel.fetchLocation() }
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.compose_multiplatform),
+                        contentDescription = "My Location",
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-                uiState.location != null -> {
-                    Text(text = "Latitude: ${uiState.location!!.latitude}")
-                    Text(text = "Longitude: ${uiState.location!!.longitude}")
-                }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                MapUI(
+                    modifier = Modifier.fillMaxSize(),
+                    state = viewModel.mapState
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun LocationMarker() {
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .clip(CircleShape)
+            .background(Color.Blue),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+        )
     }
 }
