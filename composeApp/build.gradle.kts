@@ -30,7 +30,6 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
 
-
 	        // ktor
 	        implementation(libs.ktor.client.android)
         }
