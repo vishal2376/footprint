@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.nullappstudios.footprint.presentation.permission.createPermissionHandler
 import com.nullappstudios.footprint.presentation.viewmodel.MapViewModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -38,6 +39,10 @@ fun App() {
     val viewModel: MapViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val permissionHandler = remember { createPermissionHandler() }
+    
+    var hasPermission by remember { mutableStateOf(false) }
+    var showPermissionRequest by remember { mutableStateOf(false) }
     
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -62,12 +67,32 @@ fun App() {
         }
     }
     
+    if (showPermissionRequest) {
+        permissionHandler.RequestLocationPermission(
+            onPermissionGranted = {
+                hasPermission = true
+                showPermissionRequest = false
+                viewModel.fetchLocation()
+            },
+            onPermissionDenied = {
+                showPermissionRequest = false
+            },
+            rationaleContent = { }
+        )
+    }
+    
     MaterialTheme {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { viewModel.fetchLocation() }
+                    onClick = { 
+                        if (hasPermission) {
+                            viewModel.fetchLocation()
+                        } else {
+                            showPermissionRequest = true
+                        }
+                    }
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.compose_multiplatform),
