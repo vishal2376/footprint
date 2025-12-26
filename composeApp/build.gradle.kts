@@ -99,5 +99,6 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    implementation(libs.play.services.location)
 }
 

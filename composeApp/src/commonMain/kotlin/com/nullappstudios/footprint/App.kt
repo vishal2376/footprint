@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,6 +26,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.centerOnMarker
+import ovh.plrapps.mapcompose.api.removeMarker
 import ovh.plrapps.mapcompose.ui.MapUI
 import footprint.composeapp.generated.resources.Res
 import footprint.composeapp.generated.resources.compose_multiplatform
@@ -43,6 +45,7 @@ fun App() {
     
     var hasPermission by remember { mutableStateOf(false) }
     var showPermissionRequest by remember { mutableStateOf(false) }
+    var hasCenteredOnce by remember { mutableStateOf(false) }
     
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -50,12 +53,15 @@ fun App() {
         }
     }
     
+    // Update marker position on location change
     LaunchedEffect(uiState.currentLocation) {
         uiState.currentLocation?.let { location ->
             val x = (location.longitude + 180.0) / 360.0
             val latRad = location.latitude * PI / 180.0
             val y = (1.0 - ln(tan(latRad) + 1.0 / cos(latRad)) / PI) / 2.0
             
+            // Remove old marker and add new one
+            viewModel.mapState.removeMarker("user_location")
             viewModel.mapState.addMarker(
                 id = "user_location",
                 x = x,
@@ -63,7 +69,12 @@ fun App() {
             ) {
                 LocationMarker()
             }
-            viewModel.mapState.centerOnMarker("user_location", destScale = 1.0)
+            
+            // Center only on first location
+            if (!hasCenteredOnce) {
+                viewModel.mapState.centerOnMarker("user_location", destScale = 1.0)
+                hasCenteredOnce = true
+            }
         }
     }
     
@@ -72,7 +83,7 @@ fun App() {
             onPermissionGranted = {
                 hasPermission = true
                 showPermissionRequest = false
-                viewModel.fetchLocation()
+                viewModel.startTracking()
             },
             onPermissionDenied = {
                 showPermissionRequest = false
@@ -87,16 +98,22 @@ fun App() {
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { 
-                        if (hasPermission) {
-                            viewModel.fetchLocation()
-                        } else {
+                        if (!hasPermission) {
                             showPermissionRequest = true
+                        } else if (uiState.isTracking) {
+                            viewModel.stopTracking()
+                        } else {
+                            viewModel.startTracking()
                         }
-                    }
+                    },
+                    containerColor = if (uiState.isTracking) 
+                        MaterialTheme.colorScheme.error 
+                    else 
+                        FloatingActionButtonDefaults.containerColor
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.compose_multiplatform),
-                        contentDescription = "My Location",
+                        contentDescription = if (uiState.isTracking) "Stop Tracking" else "Start Tracking",
                         modifier = Modifier.size(24.dp)
                     )
                 }

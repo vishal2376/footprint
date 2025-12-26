@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nullappstudios.footprint.domain.model.Location
 import com.nullappstudios.footprint.domain.model.MapConfig
-import com.nullappstudios.footprint.domain.usecase.GetLocationUseCase
+import com.nullappstudios.footprint.domain.usecase.GetLiveLocationUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.scale
@@ -16,18 +18,20 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 import kotlin.math.pow
 
 data class MapUiState(
-    val isLoading: Boolean = false,
+    val isTracking: Boolean = false,
     val error: String? = null,
     val currentLocation: Location? = null
 )
 
 class MapViewModel(
-    private val getLocationUseCase: GetLocationUseCase,
+    private val getLiveLocationUseCase: GetLiveLocationUseCase,
     private val tileStreamProvider: TileStreamProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+
+    private var locationJob: Job? = null
 
     private val worldSize = MapConfig.TILE_SIZE * 2.0.pow(MapConfig.MAX_ZOOM).toInt()
     
@@ -41,25 +45,37 @@ class MapViewModel(
         scale = 0.0001
     }
 
-    fun fetchLocation() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+    fun startTracking() {
+        if (locationJob?.isActive == true) return
+        
+        locationJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isTracking = true, error = null)
             
-            getLocationUseCase().fold(
-                onSuccess = { location ->
+            getLiveLocationUseCase()
+                .catch { exception ->
                     _uiState.value = _uiState.value.copy(
-                        currentLocation = location,
-                        isLoading = false,
-                        error = null
-                    )
-                },
-                onFailure = { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Unknown error"
+                        isTracking = false,
+                        error = exception.message ?: "Location error"
                     )
                 }
-            )
+                .collect { location ->
+                    _uiState.value = _uiState.value.copy(
+                        currentLocation = location,
+                        error = null
+                    )
+                }
         }
+    }
+
+    fun stopTracking() {
+        locationJob?.cancel()
+        locationJob = null
+        getLiveLocationUseCase.stop()
+        _uiState.value = _uiState.value.copy(isTracking = false)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopTracking()
     }
 }

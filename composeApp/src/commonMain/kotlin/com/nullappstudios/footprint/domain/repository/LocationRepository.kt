@@ -1,7 +1,9 @@
 package com.nullappstudios.footprint.domain.repository
 
 import com.nullappstudios.footprint.domain.model.Location
+import kotlinx.coroutines.flow.Flow
 
 interface LocationRepository {
-    suspend fun getCurrentLocation(): Result<Location>
+    fun getLocationUpdates(): Flow<Location>
+    fun stopLocationUpdates()
 }
