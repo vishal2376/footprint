@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import platform.CoreLocation.CLLocation
 import platform.CoreLocation.CLLocationManager
 import platform.CoreLocation.CLLocationManagerDelegateProtocol
-import platform.CoreLocation.kCLDistanceFilterNone
 import platform.CoreLocation.kCLLocationAccuracyBest
 import platform.Foundation.NSError
 import platform.darwin.NSObject
@@ -17,6 +16,7 @@ import platform.darwin.NSObject
 class IOSLocationDataSource : LocationDataSource {
     
     private var locationManager: CLLocationManager? = null
+    private var delegate: NSObject? = null  // Keep strong reference
     
     @OptIn(ExperimentalForeignApi::class)
     override fun getLocationUpdates(): Flow<Location> = callbackFlow {
@@ -25,7 +25,7 @@ class IOSLocationDataSource : LocationDataSource {
             distanceFilter = MIN_DISTANCE_METERS
         }
         
-        val delegate = object : NSObject(), CLLocationManagerDelegateProtocol {
+        delegate = object : NSObject(), CLLocationManagerDelegateProtocol {
             override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
                 val clLocation = didUpdateLocations.lastOrNull() as? CLLocation
                 clLocation?.coordinate?.useContents {
@@ -43,19 +43,23 @@ class IOSLocationDataSource : LocationDataSource {
             }
         }
         
-        locationManager?.delegate = delegate
+        locationManager?.delegate = delegate as? CLLocationManagerDelegateProtocol
         locationManager?.requestWhenInUseAuthorization()
         locationManager?.startUpdatingLocation()
         
         awaitClose {
             locationManager?.stopUpdatingLocation()
+            locationManager?.delegate = null
             locationManager = null
+            delegate = null
         }
     }
 
     override fun stopLocationUpdates() {
         locationManager?.stopUpdatingLocation()
+        locationManager?.delegate = null
         locationManager = null
+        delegate = null
     }
 
     companion object {

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
+import ovh.plrapps.mapcompose.api.enableRotation
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -42,6 +43,7 @@ class MapViewModel(
         workerCount = 16
     ).apply {
         addLayer(tileStreamProvider)
+        enableRotation()
         scale = 0.0001
     }
 
