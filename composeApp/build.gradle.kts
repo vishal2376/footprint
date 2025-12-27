@@ -72,6 +72,9 @@ kotlin {
 			// Room DB
 			implementation(libs.androidx.room.runtime)
 			implementation(libs.androidx.sqlite.bundled)
+
+			// DateTime
+			implementation(libs.kotlinx.datetime)
 		}
 
 		iosMain.dependencies {
