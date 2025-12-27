@@ -10,6 +10,7 @@ import com.nullappstudios.footprint.domain.usecase.GetLiveLocationUseCase
 import com.nullappstudios.footprint.presentation.map_screen.action.MapAction
 import com.nullappstudios.footprint.presentation.map_screen.events.MapEvent
 import com.nullappstudios.footprint.presentation.map_screen.state.MapState
+import com.nullappstudios.footprint.util.TimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,9 +24,9 @@ import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.enableRotation
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.core.TileStreamProvider
-import kotlin.math.pow
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import ovh.plrapps.mapcompose.ui.state.MapState as MapComposeState
@@ -44,7 +45,6 @@ class MapViewModel(
 
 	private var locationJob: Job? = null
 	private var trackStartTime: Long = 0
-	private var pointIndex = 0
 
 	private val worldSize = MapConfig.TILE_SIZE * 2.0.pow(MapConfig.MAX_ZOOM).toInt()
 
@@ -63,14 +63,10 @@ class MapViewModel(
 		when (action) {
 			MapAction.ToggleTracking -> handleToggleTracking()
 			MapAction.ToggleFollowLocation -> handleToggleFollow()
-			MapAction.ResetRotation -> { /* Handled in UI via mapComposeState */
-			}
-
+			MapAction.ResetRotation -> { /* Handled in UI via mapComposeState */ }
 			MapAction.RequestPermission -> _events.trySend(MapEvent.RequestLocationPermission)
 			MapAction.PermissionGranted -> handlePermissionGranted()
-			MapAction.PermissionDenied -> { /* No-op */
-			}
-
+			MapAction.PermissionDenied -> { /* No-op */ }
 			MapAction.NavigateBack -> _events.trySend(MapEvent.NavigateBack)
 		}
 	}
@@ -104,50 +100,36 @@ class MapViewModel(
 	private fun startTracking() {
 		if (locationJob?.isActive == true) return
 
-		viewModelScope.launch {
-			trackStartTime = System.currentTimeMillis()
-			pointIndex = 0
-			val trackId = trackRepository.createTrack("Track ${formatTime(trackStartTime)}")
-			_state.update {
-				it.copy(
-					isTracking = true,
-					activeTrackId = trackId,
-					trackPoints = emptyList(),
-					error = null
-				)
-			}
+		trackStartTime = TimeUtils.now()
+		_state.update {
+			it.copy(
+				isTracking = true,
+				trackPoints = emptyList(),
+				error = null
+			)
+		}
 
-			locationJob = viewModelScope.launch {
-				getLiveLocationUseCase()
-					.catch { exception ->
-						_state.update {
-							it.copy(isTracking = false, error = exception.message ?: "Location error")
-						}
-						_events.trySend(MapEvent.ShowSnackbar(exception.message ?: "Location error"))
+		locationJob = viewModelScope.launch {
+			getLiveLocationUseCase()
+				.catch { exception ->
+					_state.update {
+						it.copy(isTracking = false, error = exception.message ?: "Location error")
 					}
-					.collect { location ->
-						val currentPoints = _state.value.trackPoints
-						val newPoints = currentPoints + location
+					_events.trySend(MapEvent.ShowSnackbar(exception.message ?: "Location error"))
+				}
+				.collect { location ->
+					// Only collect points in memory - no DB writes during tracking
+					val currentPoints = _state.value.trackPoints
+					val newPoints = currentPoints + location
 
-						// Save point to database
-						_state.value.activeTrackId?.let { trackId ->
-							val trackPoint = TrackPoint(
-								latitude = location.latitude,
-								longitude = location.longitude,
-								timestamp = System.currentTimeMillis()
-							)
-							trackRepository.addTrackPoint(trackId, trackPoint, pointIndex++)
-						}
-
-						_state.update {
-							it.copy(
-								currentLocation = location,
-								trackPoints = newPoints,
-								error = null
-							)
-						}
+					_state.update {
+						it.copy(
+							currentLocation = location,
+							trackPoints = newPoints,
+							error = null
+						)
 					}
-			}
+				}
 		}
 	}
 
@@ -156,15 +138,30 @@ class MapViewModel(
 		locationJob = null
 		getLiveLocationUseCase.stop()
 
-		viewModelScope.launch {
-			val trackId = _state.value.activeTrackId
-			val points = _state.value.trackPoints
+		val points = _state.value.trackPoints
 
-			if (trackId != null && points.size >= 2) {
-				val endTime = System.currentTimeMillis()
+		if (points.size >= 2) {
+			// Batch save all points to database at once
+			viewModelScope.launch {
+				val endTime = TimeUtils.now()
 				val distance = calculateTotalDistance(points)
 				val duration = (endTime - trackStartTime) / 1000
 
+				// Create track with metadata
+				val trackName = "Track ${TimeUtils.formatDateTime(trackStartTime)}"
+				val trackId = trackRepository.createTrack(trackName)
+
+				// Batch insert all points at once
+				val trackPoints = points.mapIndexed { index, location ->
+					TrackPoint(
+						latitude = location.latitude,
+						longitude = location.longitude,
+						timestamp = trackStartTime + (index * 3000L)
+					) to index
+				}
+				trackRepository.addTrackPoints(trackId, trackPoints)
+
+				// Update track with final stats
 				trackRepository.finishTrack(
 					trackId = trackId,
 					endTime = endTime,
@@ -172,17 +169,15 @@ class MapViewModel(
 					durationSeconds = duration
 				)
 
-				_events.trySend(MapEvent.ShowSnackbar("Track saved: ${formatDistance(distance)}"))
-			} else if (trackId != null) {
-				trackRepository.deleteTrack(trackId)
+				_events.trySend(MapEvent.ShowSnackbar("Track saved: ${TimeUtils.formatDistance(distance)}"))
 			}
+		}
 
-			_state.update {
-				it.copy(
-					isTracking = false,
-					activeTrackId = null
-				)
-			}
+		_state.update {
+			it.copy(
+				isTracking = false,
+				activeTrackId = null
+			)
 		}
 	}
 
@@ -195,26 +190,13 @@ class MapViewModel(
 
 	private fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
 		val R = 6371000.0 // Earth radius in meters
-		val dLat = Math.toRadians(lat2 - lat1)
-		val dLon = Math.toRadians(lon2 - lon1)
+		val dLat = kotlin.math.PI / 180 * (lat2 - lat1)
+		val dLon = kotlin.math.PI / 180 * (lon2 - lon1)
 		val a = sin(dLat / 2) * sin(dLat / 2) +
-				cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+				cos(kotlin.math.PI / 180 * lat1) * cos(kotlin.math.PI / 180 * lat2) *
 				sin(dLon / 2) * sin(dLon / 2)
 		val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 		return R * c
-	}
-
-	private fun formatDistance(meters: Double): String {
-		return if (meters >= 1000) {
-			String.format("%.2f km", meters / 1000)
-		} else {
-			String.format("%.0f m", meters)
-		}
-	}
-
-	private fun formatTime(timestamp: Long): String {
-		val date = java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault())
-		return date.format(java.util.Date(timestamp))
 	}
 
 	override fun onCleared() {

@@ -8,6 +8,7 @@ import com.nullappstudios.footprint.domain.model.TrackPoint
 import com.nullappstudios.footprint.domain.repository.TrackRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.nullappstudios.footprint.util.TimeUtils
 
 class TrackRepositoryImpl(
 	private val trackDao: TrackDao,
@@ -16,7 +17,7 @@ class TrackRepositoryImpl(
 	override suspend fun createTrack(name: String): Long {
 		val entity = TrackEntity(
 			name = name,
-			startTime = System.currentTimeMillis()
+			startTime = TimeUtils.now()
 		)
 		return trackDao.insertTrack(entity)
 	}
