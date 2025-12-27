@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nullappstudios.footprint.presentation.common.components.BaseScreen
 import com.nullappstudios.footprint.presentation.common.components.LocationMarker
@@ -27,8 +28,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.centerOnMarker
 import ovh.plrapps.mapcompose.api.removeMarker
+import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.rotateTo
 import ovh.plrapps.mapcompose.ui.MapUI
 
@@ -77,6 +80,24 @@ fun MapScreen(
 					viewModel.markZoomed()
 				} else {
 					viewModel.mapComposeState.centerOnMarker("user_location")
+				}
+			}
+		}
+	}
+
+	// Draw track path on map
+	LaunchedEffect(state.trackPoints) {
+		val points = state.trackPoints
+		if (points.size >= 2) {
+			// Remove existing path and add updated one
+			viewModel.mapComposeState.removePath("active_track")
+			viewModel.mapComposeState.addPath(
+				id = "active_track",
+				color = Color(0xFF1E90FF), // Dodger Blue
+			) {
+				points.forEach { location ->
+					val (x, y) = CoordinateUtils.toNormalized(location.latitude, location.longitude)
+					addPoint(x, y)
 				}
 			}
 		}

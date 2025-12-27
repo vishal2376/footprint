@@ -8,5 +8,7 @@ data class MapState(
 	val followLocation: Boolean = true,
 	val hasZoomedOnce: Boolean = false,
 	val currentLocation: Location? = null,
+	val trackPoints: List<Location> = emptyList(),
+	val activeTrackId: Long? = null,
 	val error: String? = null,
 )
