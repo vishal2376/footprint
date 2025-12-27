@@ -61,6 +61,9 @@ kotlin {
 
             // navigation
             implementation(libs.navigation.compose)
+
+            // material icons
+            implementation(compose.materialIconsExtended)
         }
 
 	    iosMain.dependencies {

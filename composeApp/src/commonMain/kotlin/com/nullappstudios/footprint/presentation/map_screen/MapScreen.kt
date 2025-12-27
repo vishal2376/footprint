@@ -3,7 +3,6 @@ package com.nullappstudios.footprint.presentation.map_screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nullappstudios.footprint.presentation.common.components.BaseScreen
 import com.nullappstudios.footprint.presentation.common.components.LocationMarker
 import com.nullappstudios.footprint.presentation.common.utils.CoordinateUtils
 import com.nullappstudios.footprint.presentation.map_screen.action.MapAction
@@ -101,6 +101,7 @@ fun MapScreen(
 		state = state,
 		mapComposeState = viewModel.mapComposeState,
 		snackbarHostState = snackbarHostState,
+		onBackClick = onNavigateBack,
 		onCompassClick = {
 			scope.launch { viewModel.mapComposeState.rotateTo(0f) }
 		},
@@ -114,11 +115,15 @@ private fun MapScreenContent(
 	state: MapState,
 	mapComposeState: ovh.plrapps.mapcompose.ui.state.MapState,
 	snackbarHostState: SnackbarHostState,
+	onBackClick: () -> Unit,
 	onCompassClick: () -> Unit,
 	onFollowClick: () -> Unit,
 	onTrackingClick: () -> Unit,
 ) {
-	Scaffold(
+	BaseScreen(
+		title = "Map",
+		showBackButton = true,
+		onBackClick = onBackClick,
 		snackbarHost = { SnackbarHost(snackbarHostState) },
 		floatingActionButton = {
 			MapFabColumn(
