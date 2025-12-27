@@ -7,5 +7,5 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual val platformModule: Module = module {
-    single<LocationDataSource> { AndroidLocationDataSource(androidContext()) }
+	single<LocationDataSource> { AndroidLocationDataSource(androidContext()) }
 }

@@ -51,6 +51,7 @@ fun MapScreen(
 				MapEvent.RequestLocationPermission -> {
 					showPermissionRequest = true
 				}
+
 				is MapEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
 			}
 		}

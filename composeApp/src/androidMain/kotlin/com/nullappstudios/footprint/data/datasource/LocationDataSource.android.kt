@@ -15,57 +15,57 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 class AndroidLocationDataSource(
-    context: Context
+	context: Context,
 ) : LocationDataSource {
 
-    private val fusedLocationClient: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(context)
-    
-    private var locationCallback: LocationCallback? = null
+	private val fusedLocationClient: FusedLocationProviderClient =
+		LocationServices.getFusedLocationProviderClient(context)
 
-    @SuppressLint("MissingPermission")
-    override fun getLocationUpdates(): Flow<Location> = callbackFlow {
-        val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            UPDATE_INTERVAL_MS
-        ).apply {
-            setMinUpdateIntervalMillis(MIN_UPDATE_INTERVAL_MS)
-            setMinUpdateDistanceMeters(MIN_UPDATE_DISTANCE_METERS)
-        }.build()
+	private var locationCallback: LocationCallback? = null
 
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { androidLocation ->
-                    trySend(
-                        Location(
-                            latitude = androidLocation.latitude,
-                            longitude = androidLocation.longitude
-                        )
-                    )
-                }
-            }
-        }
+	@SuppressLint("MissingPermission")
+	override fun getLocationUpdates(): Flow<Location> = callbackFlow {
+		val locationRequest = LocationRequest.Builder(
+			Priority.PRIORITY_HIGH_ACCURACY,
+			UPDATE_INTERVAL_MS
+		).apply {
+			setMinUpdateIntervalMillis(MIN_UPDATE_INTERVAL_MS)
+			setMinUpdateDistanceMeters(MIN_UPDATE_DISTANCE_METERS)
+		}.build()
 
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback!!,
-            Looper.getMainLooper()
-        )
+		locationCallback = object : LocationCallback() {
+			override fun onLocationResult(result: LocationResult) {
+				result.lastLocation?.let { androidLocation ->
+					trySend(
+						Location(
+							latitude = androidLocation.latitude,
+							longitude = androidLocation.longitude
+						)
+					)
+				}
+			}
+		}
 
-        awaitClose {
-            locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
-            locationCallback = null
-        }
-    }
+		fusedLocationClient.requestLocationUpdates(
+			locationRequest,
+			locationCallback!!,
+			Looper.getMainLooper()
+		)
 
-    override fun stopLocationUpdates() {
-        locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
-        locationCallback = null
-    }
+		awaitClose {
+			locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
+			locationCallback = null
+		}
+	}
 
-    companion object {
-        private const val UPDATE_INTERVAL_MS = 3000L
-        private const val MIN_UPDATE_INTERVAL_MS = 1500L
-        private const val MIN_UPDATE_DISTANCE_METERS = 5f
-    }
+	override fun stopLocationUpdates() {
+		locationCallback?.let { fusedLocationClient.removeLocationUpdates(it) }
+		locationCallback = null
+	}
+
+	companion object {
+		private const val UPDATE_INTERVAL_MS = 3000L
+		private const val MIN_UPDATE_INTERVAL_MS = 1500L
+		private const val MIN_UPDATE_DISTANCE_METERS = 5f
+	}
 }
