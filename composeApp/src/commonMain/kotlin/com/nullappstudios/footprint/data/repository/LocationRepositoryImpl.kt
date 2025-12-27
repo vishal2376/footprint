@@ -6,14 +6,14 @@ import com.nullappstudios.footprint.domain.repository.LocationRepository
 import kotlinx.coroutines.flow.Flow
 
 class LocationRepositoryImpl(
-    private val locationDataSource: LocationDataSource
+	private val locationDataSource: LocationDataSource,
 ) : LocationRepository {
 
-    override fun getLocationUpdates(): Flow<Location> {
-        return locationDataSource.getLocationUpdates()
-    }
+	override fun getLocationUpdates(): Flow<Location> {
+		return locationDataSource.getLocationUpdates()
+	}
 
-    override fun stopLocationUpdates() {
-        locationDataSource.stopLocationUpdates()
-    }
+	override fun stopLocationUpdates() {
+		locationDataSource.stopLocationUpdates()
+	}
 }
