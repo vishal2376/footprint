@@ -54,6 +54,7 @@ fun App() {
     var hasPermission by remember { mutableStateOf(false) }
     var showPermissionRequest by remember { mutableStateOf(false) }
     var hasZoomedOnce by remember { mutableStateOf(false) }
+    var followLocation by remember { mutableStateOf(true) }
     
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -78,12 +79,14 @@ fun App() {
                 LocationMarker()
             }
             
-            // Center on marker (zoom to 1.0 only first time)
-            if (!hasZoomedOnce) {
-                viewModel.mapState.centerOnMarker("user_location", destScale = 1.0)
-                hasZoomedOnce = true
-            } else {
-                viewModel.mapState.centerOnMarker("user_location")
+            // Center on marker only if followLocation is enabled
+            if (followLocation) {
+                if (!hasZoomedOnce) {
+                    viewModel.mapState.centerOnMarker("user_location", destScale = 1.0)
+                    hasZoomedOnce = true
+                } else {
+                    viewModel.mapState.centerOnMarker("user_location")
+                }
             }
         }
     }
@@ -115,11 +118,24 @@ fun App() {
                         onClick = {
                             scope.launch {
                                 viewModel.mapState.rotateTo(0f)
-                                snackbarHostState.showSnackbar("Facing North")
                             }
                         }
                     ) {
                         Text("N", fontWeight = FontWeight.Bold)
+                    }
+                    
+                    // Follow location toggle button
+                    SmallFloatingActionButton(
+                        onClick = { followLocation = !followLocation },
+                        containerColor = if (followLocation)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Text(
+                            text = if (followLocation) "📍" else "🔓",
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     
                     // Location tracking button
