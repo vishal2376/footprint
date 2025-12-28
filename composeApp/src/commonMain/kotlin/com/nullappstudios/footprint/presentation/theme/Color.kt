@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 // Primary Colors
 val primary = Color(0xFF1E90FF)
-val primaryContainer = Color(0xFF004A77)
+val primaryContainer = Color(0xFF181823)
 val onPrimaryContainer = Color(0xFFD1E4FF)
 
 // Dark Background - Blue-Black AMOLED
