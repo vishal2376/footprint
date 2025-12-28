@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import com.nullappstudios.footprint.presentation.map_screen.events.MapEvent
 import com.nullappstudios.footprint.presentation.map_screen.state.MapState
 import com.nullappstudios.footprint.presentation.map_screen.viewmodel.MapViewModel
 import com.nullappstudios.footprint.presentation.permission.createPermissionHandler
+import com.nullappstudios.footprint.presentation.theme.trackPath
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -35,6 +37,11 @@ import ovh.plrapps.mapcompose.api.removePath
 import ovh.plrapps.mapcompose.api.rotateTo
 import ovh.plrapps.mapcompose.ui.MapUI
 
+private object MapIds {
+	const val USER_LOCATION_MARKER = "user_location"
+	const val ACTIVE_TRACK_PATH = "active_track"
+}
+
 @Composable
 fun MapScreen(
 	onNavigateBack: () -> Unit,
@@ -45,6 +52,20 @@ fun MapScreen(
 	val permissionHandler = remember { createPermissionHandler() }
 	val scope = rememberCoroutineScope()
 	var showPermissionRequest by remember { mutableStateOf(false) }
+
+	// Stop tracking when leaving screen
+	DisposableEffect(Unit) {
+		onDispose {
+			if (state.isTracking) {
+				viewModel.onAction(MapAction.ToggleTracking)
+			}
+		}
+	}
+
+	// Auto-start tracking when screen opens
+	LaunchedEffect(Unit) {
+		viewModel.onAction(MapAction.ToggleTracking)
+	}
 
 	// Handle one-time events
 	LaunchedEffect(Unit) {
@@ -65,9 +86,9 @@ fun MapScreen(
 		state.currentLocation?.let { location ->
 			val (x, y) = CoordinateUtils.toNormalized(location.latitude, location.longitude)
 
-			viewModel.mapComposeState.removeMarker("user_location")
+			viewModel.mapComposeState.removeMarker(MapIds.USER_LOCATION_MARKER)
 			viewModel.mapComposeState.addMarker(
-				id = "user_location",
+				id = MapIds.USER_LOCATION_MARKER,
 				x = x,
 				y = y
 			) {
@@ -76,10 +97,10 @@ fun MapScreen(
 
 			if (state.followLocation) {
 				if (!state.hasZoomedOnce) {
-					viewModel.mapComposeState.centerOnMarker("user_location", destScale = 1.0)
+					viewModel.mapComposeState.centerOnMarker(MapIds.USER_LOCATION_MARKER, destScale = 1.0)
 					viewModel.markZoomed()
 				} else {
-					viewModel.mapComposeState.centerOnMarker("user_location")
+					viewModel.mapComposeState.centerOnMarker(MapIds.USER_LOCATION_MARKER)
 				}
 			}
 		}
@@ -90,10 +111,10 @@ fun MapScreen(
 		val points = state.trackPoints
 		if (points.size >= 2) {
 			// Remove existing path and add updated one
-			viewModel.mapComposeState.removePath("active_track")
+			viewModel.mapComposeState.removePath(MapIds.ACTIVE_TRACK_PATH)
 			viewModel.mapComposeState.addPath(
-				id = "active_track",
-				color = Color(0xFF1E90FF), // Dodger Blue
+				id = MapIds.ACTIVE_TRACK_PATH,
+				color = trackPath,
 			) {
 				points.forEach { location ->
 					val (x, y) = CoordinateUtils.toNormalized(location.latitude, location.longitude)

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nullappstudios.footprint.presentation.map_screen.state.MapState
+import com.nullappstudios.footprint.presentation.theme.trackingStop
 
 @Composable
 fun MapFabColumn(
@@ -168,7 +169,7 @@ private fun TrackingFab(
 
 	val backgroundColor by animateColorAsState(
 		targetValue = if (isTracking)
-			Color(0xFFFF3B30)
+			trackingStop
 		else
 			MaterialTheme.colorScheme.primary,
 		label = "bgColor"

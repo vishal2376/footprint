@@ -22,3 +22,7 @@ val onSurfaceVariant = Color(0xFFC4CAD4)
 // Error
 val error = Color(0xFFFFB4AB)
 val onError = Color(0xFF690005)
+
+// Track Colors
+val trackPath = Color(0xFF1E90FF)
+val trackingStop = Color(0xFFFF3B30)

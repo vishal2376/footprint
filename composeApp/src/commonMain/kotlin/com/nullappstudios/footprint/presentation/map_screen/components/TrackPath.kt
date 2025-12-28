@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.nullappstudios.footprint.domain.model.Location
 import com.nullappstudios.footprint.presentation.common.utils.CoordinateUtils
+import com.nullappstudios.footprint.presentation.theme.trackPath
 
 @Composable
 fun TrackPath(
@@ -21,7 +22,7 @@ fun TrackPath(
 	scrollX: Double,
 	scrollY: Double,
 	modifier: Modifier = Modifier,
-	color: Color = Color(0xFF1E90FF),
+	color: Color = trackPath,
 	strokeWidth: Float = 6f,
 ) {
 	if (points.size < 2) return
