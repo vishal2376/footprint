@@ -1,5 +1,9 @@
 package com.nullappstudios.footprint.presentation.map_screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,13 +18,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nullappstudios.footprint.presentation.common.components.BaseScreen
 import com.nullappstudios.footprint.presentation.common.components.LocationMarker
 import com.nullappstudios.footprint.presentation.common.utils.CoordinateUtils
 import com.nullappstudios.footprint.presentation.map_screen.action.MapAction
 import com.nullappstudios.footprint.presentation.map_screen.components.MapFabColumn
+import com.nullappstudios.footprint.presentation.map_screen.components.MapLoadingOverlay
 import com.nullappstudios.footprint.presentation.map_screen.events.MapEvent
 import com.nullappstudios.footprint.presentation.map_screen.state.MapState
 import com.nullappstudios.footprint.presentation.map_screen.viewmodel.MapViewModel
@@ -185,6 +189,15 @@ private fun MapScreenContent(
 				modifier = Modifier.fillMaxSize(),
 				state = mapComposeState
 			)
+
+			// Loading overlay - shows until location is found
+			AnimatedVisibility(
+				visible = state.currentLocation == null,
+				enter = fadeIn(),
+				exit = fadeOut(animationSpec = tween(500))
+			) {
+				MapLoadingOverlay()
+			}
 		}
 	}
 }
