@@ -10,5 +10,6 @@ data class MapState(
 	val currentLocation: Location? = null,
 	val trackPoints: List<Location> = emptyList(),
 	val activeTrackId: Long? = null,
+	val exploredTiles: Set<String> = emptySet(),
 	val error: String? = null,
 )

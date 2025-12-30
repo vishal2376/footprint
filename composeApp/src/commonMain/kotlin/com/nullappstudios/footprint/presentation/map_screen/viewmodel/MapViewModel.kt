@@ -2,26 +2,35 @@ package com.nullappstudios.footprint.presentation.map_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nullappstudios.footprint.domain.model.ExploredTile
 import com.nullappstudios.footprint.domain.model.Location
 import com.nullappstudios.footprint.domain.model.MapConfig
 import com.nullappstudios.footprint.domain.model.TrackPoint
+import com.nullappstudios.footprint.domain.repository.ExploredTileRepository
 import com.nullappstudios.footprint.domain.repository.TrackRepository
 import com.nullappstudios.footprint.domain.usecase.GetLiveLocationUseCase
 import com.nullappstudios.footprint.presentation.map_screen.action.MapAction
 import com.nullappstudios.footprint.presentation.map_screen.events.MapEvent
 import com.nullappstudios.footprint.presentation.map_screen.state.MapState
+import com.nullappstudios.footprint.util.TileUtils
 import com.nullappstudios.footprint.util.TimeUtils
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.enableRotation
+import ovh.plrapps.mapcompose.api.reloadTiles
 import ovh.plrapps.mapcompose.api.scale
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import kotlin.math.atan2
@@ -35,6 +44,8 @@ class MapViewModel(
 	private val getLiveLocationUseCase: GetLiveLocationUseCase,
 	private val tileStreamProvider: TileStreamProvider,
 	private val trackRepository: TrackRepository,
+	private val exploredTileRepository: ExploredTileRepository,
+	private val exploredTilesStateFlow: MutableStateFlow<Set<String>>,
 ) : ViewModel() {
 
 	private val _state = MutableStateFlow(MapState())
@@ -45,6 +56,9 @@ class MapViewModel(
 
 	private var locationJob: Job? = null
 	private var trackStartTime: Long = 0
+	private var lastExploredTileKey: String? = null
+	private var reloadJob: Job? = null
+	private val tileMutex = Mutex()
 
 	private val worldSize = MapConfig.TILE_SIZE * 2.0.pow(MapConfig.MAX_ZOOM).toInt()
 
@@ -57,6 +71,34 @@ class MapViewModel(
 		addLayer(tileStreamProvider)
 		enableRotation()
 		scale = 0.0001
+	}
+
+	init {
+		loadExploredTiles()
+	}
+
+	private fun loadExploredTiles() {
+		exploredTileRepository.getExploredTileKeys()
+			.onEach { tiles ->
+				val previousSize = _state.value.exploredTiles.size
+				_state.update { it.copy(exploredTiles = tiles) }
+				exploredTilesStateFlow.value = tiles
+
+				// Debounced tile reload - only when new tiles added
+				if (tiles.size > previousSize) {
+					scheduleReloadTiles()
+				}
+			}
+			.launchIn(viewModelScope)
+	}
+
+	private fun scheduleReloadTiles() {
+		// Cancel pending reload and schedule new one (debounce 500ms)
+		reloadJob?.cancel()
+		reloadJob = viewModelScope.launch {
+			delay(500)
+			mapComposeState.reloadTiles()
+		}
 	}
 
 	fun onAction(action: MapAction) {
@@ -118,7 +160,6 @@ class MapViewModel(
 					_events.trySend(MapEvent.ShowSnackbar(exception.message ?: "Location error"))
 				}
 				.collect { location ->
-					// Only collect points in memory - no DB writes during tracking
 					val currentPoints = _state.value.trackPoints
 					val newPoints = currentPoints + location
 
@@ -129,7 +170,48 @@ class MapViewModel(
 							error = null
 						)
 					}
+
+					// Only explore if we moved to a NEW tile
+					markTileExploredIfNew(location)
 				}
+		}
+	}
+
+	private fun markTileExploredIfNew(location: Location) {
+		val currentTile = TileUtils.latLonToTile(location.latitude, location.longitude, 19)
+		val currentKey = currentTile.toKey()
+
+		// Skip if we're still in the same tile
+		if (currentKey == lastExploredTileKey) return
+		lastExploredTileKey = currentKey
+
+		// Check if tile is already explored (in memory)
+		if (currentKey in _state.value.exploredTiles) return
+
+		// Mark as explored
+		viewModelScope.launch {
+			val tiles = TileUtils.getExplorationTiles(
+				lat = location.latitude,
+				lon = location.longitude,
+				baseZoom = 19
+			)
+
+			// Filter out already explored tiles
+			val newTiles = tiles.filter { it.toKey() !in _state.value.exploredTiles }
+			if (newTiles.isEmpty()) return@launch
+
+			val exploredTiles = newTiles.map { tile ->
+				ExploredTile(
+					x = tile.x,
+					y = tile.y,
+					zoom = tile.zoom,
+					exploredAt = TimeUtils.now()
+				)
+			}
+
+			tileMutex.withLock {
+				exploredTileRepository.markTilesExplored(exploredTiles)
+			}
 		}
 	}
 
@@ -141,17 +223,14 @@ class MapViewModel(
 		val points = _state.value.trackPoints
 
 		if (points.size >= 2) {
-			// Batch save all points to database at once
 			viewModelScope.launch {
 				val endTime = TimeUtils.now()
 				val distance = calculateTotalDistance(points)
 				val duration = (endTime - trackStartTime) / 1000
 
-				// Create track with metadata
 				val trackName = "Track ${TimeUtils.formatDateTime(trackStartTime)}"
 				val trackId = trackRepository.createTrack(trackName)
 
-				// Batch insert all points at once
 				val trackPoints = points.mapIndexed { index, location ->
 					TrackPoint(
 						latitude = location.latitude,
@@ -161,7 +240,6 @@ class MapViewModel(
 				}
 				trackRepository.addTrackPoints(trackId, trackPoints)
 
-				// Update track with final stats
 				trackRepository.finishTrack(
 					trackId = trackId,
 					endTime = endTime,
@@ -189,7 +267,7 @@ class MapViewModel(
 	}
 
 	private fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-		val R = 6371000.0 // Earth radius in meters
+		val R = 6371000.0
 		val dLat = kotlin.math.PI / 180 * (lat2 - lat1)
 		val dLon = kotlin.math.PI / 180 * (lon2 - lon1)
 		val a = sin(dLat / 2) * sin(dLat / 2) +
