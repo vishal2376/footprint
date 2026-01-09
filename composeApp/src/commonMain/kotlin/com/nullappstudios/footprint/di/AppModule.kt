@@ -32,6 +32,7 @@ val databaseModule = module {
 		get<androidx.room.RoomDatabase.Builder<AppDatabase>>()
 			.fallbackToDestructiveMigration(dropAllTables = true)
 			.setDriver(BundledSQLiteDriver())
+			.setJournalMode(androidx.room.RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
 			.setQueryCoroutineContext(Dispatchers.IO)
 			.build()
 	}
@@ -60,13 +61,13 @@ val domainModule = module {
 }
 
 val presentationModule = module {
-	viewModel { HomeViewModel() }
+	viewModel { HomeViewModel(lazy { get() }, lazy { get() }) }
 	viewModel {
 		MapViewModel(
 			getLiveLocationUseCase = get(),
 			tileStreamProvider = get(),
-			trackRepository = get(),
-			exploredTileRepository = get(),
+			trackRepository = lazy { get() },
+			exploredTileRepository = lazy { get() },
 			exploredTilesStateFlow = get()
 		)
 	}

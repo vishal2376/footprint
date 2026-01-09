@@ -1,34 +1,41 @@
 package com.nullappstudios.footprint.presentation.home_screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nullappstudios.footprint.presentation.home_screen.action.HomeAction
+import com.nullappstudios.footprint.presentation.home_screen.components.BentoGrid
+import com.nullappstudios.footprint.presentation.home_screen.components.ExploreButton
 import com.nullappstudios.footprint.presentation.home_screen.events.HomeEvent
-import com.nullappstudios.footprint.presentation.home_screen.state.HomeState
 import com.nullappstudios.footprint.presentation.home_screen.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
+/**
+ * Home screen displaying exploration stats and CTA to start exploring.
+ */
 @Composable
 fun HomeScreen(
 	onNavigateToMap: () -> Unit,
 	viewModel: HomeViewModel = koinViewModel(),
 ) {
-	val state by viewModel.state.collectAsStateWithLifecycle()
+	val state by viewModel.state.collectAsState()
 
 	LaunchedEffect(Unit) {
 		viewModel.events.collectLatest { event ->
@@ -38,37 +45,50 @@ fun HomeScreen(
 		}
 	}
 
-	HomeScreenContent(
-		state = state,
-		onAction = viewModel::onAction
-	)
-}
-
-@Composable
-private fun HomeScreenContent(
-	state: HomeState,
-	onAction: (HomeAction) -> Unit,
-) {
-	Scaffold { paddingValues ->
-		Box(
+	Scaffold { padding ->
+		Column(
 			modifier = Modifier
 				.fillMaxSize()
-				.padding(paddingValues),
-			contentAlignment = Alignment.Center
+				.background(MaterialTheme.colorScheme.background)
+				.padding(padding)
+				.padding(horizontal = 8.dp, vertical = 16.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Column(
-				horizontalAlignment = Alignment.CenterHorizontally,
-				verticalArrangement = Arrangement.spacedBy(16.dp)
+				modifier = Modifier
+					.weight(1f)
+					.verticalScroll(rememberScrollState())
 			) {
+				// Header
 				Text(
-					text = state.appName,
-					style = MaterialTheme.typography.headlineLarge
+					text = "Footprint",
+					style = MaterialTheme.typography.headlineLarge,
+					fontWeight = FontWeight.Bold,
+					color = MaterialTheme.colorScheme.onBackground
+				)
+				Text(
+					text = "Where you go, the world reveals",
+					style = MaterialTheme.typography.bodyMedium,
+					color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
 				)
 
-				Button(onClick = { onAction(HomeAction.NavigateToMap) }) {
-					Text("Open Map")
-				}
+				Spacer(modifier = Modifier.height(24.dp))
+
+				// Bento Grid with stats
+				BentoGrid(state = state)
 			}
+
+			// Bottom CTA Button
+			ExploreButton(
+				onClick = { viewModel.onAction(HomeAction.NavigateToMap) },
+				modifier = Modifier.padding(top = 16.dp)
+			)
 		}
 	}
+}
+
+// Preview
+@Composable
+fun HomeScreenPreview() {
+	// Preview would require mock ViewModel
 }

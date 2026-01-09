@@ -30,4 +30,7 @@ interface ExploredTileDao {
 
 	@Query("SELECT COUNT(*) FROM explored_tiles")
 	suspend fun getExploredTileCount(): Int
+
+	@Query("SELECT COUNT(*) FROM explored_tiles")
+	fun getExploredTileCountFlow(): Flow<Int>
 }

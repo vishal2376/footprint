@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,11 +58,13 @@ fun MapScreen(
 	val scope = rememberCoroutineScope()
 	var showPermissionRequest by remember { mutableStateOf(false) }
 
-	// Stop tracking when leaving screen
+	// Stop and save tracking when leaving screen
+	val currentIsTracking = rememberUpdatedState(state.isTracking)
+	val currentViewModel = rememberUpdatedState(viewModel)
 	DisposableEffect(Unit) {
 		onDispose {
-			if (state.isTracking) {
-				viewModel.onAction(MapAction.ToggleTracking)
+			if (currentIsTracking.value) {
+				currentViewModel.value.onAction(MapAction.ToggleTracking)
 			}
 		}
 	}

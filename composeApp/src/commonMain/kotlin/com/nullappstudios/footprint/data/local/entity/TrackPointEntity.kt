@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
 			onDelete = ForeignKey.CASCADE
 		)
 	],
-	indices = [Index("trackId")]
+	indices = [Index(value = ["trackId", "orderIndex"])]
 )
 data class TrackPointEntity(
 	@PrimaryKey(autoGenerate = true)

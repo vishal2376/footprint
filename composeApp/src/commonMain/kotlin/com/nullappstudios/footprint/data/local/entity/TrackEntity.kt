@@ -2,8 +2,12 @@ package com.nullappstudios.footprint.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Index
 
-@Entity(tableName = "tracks")
+@Entity(
+	tableName = "tracks",
+	indices = [Index(value = ["startTime"])]
+)
 data class TrackEntity(
 	@PrimaryKey(autoGenerate = true)
 	val id: Long = 0,

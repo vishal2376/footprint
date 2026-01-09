@@ -12,6 +12,7 @@ import com.nullappstudios.footprint.domain.usecase.GetLiveLocationUseCase
 import com.nullappstudios.footprint.presentation.map_screen.action.MapAction
 import com.nullappstudios.footprint.presentation.map_screen.events.MapEvent
 import com.nullappstudios.footprint.presentation.map_screen.state.MapState
+import com.nullappstudios.footprint.util.FormatUtils
 import com.nullappstudios.footprint.util.TileUtils
 import com.nullappstudios.footprint.util.TimeUtils
 import kotlinx.coroutines.Job
@@ -39,12 +40,14 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import ovh.plrapps.mapcompose.ui.state.MapState as MapComposeState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 
 class MapViewModel(
 	private val getLiveLocationUseCase: GetLiveLocationUseCase,
 	private val tileStreamProvider: TileStreamProvider,
-	private val trackRepository: TrackRepository,
-	private val exploredTileRepository: ExploredTileRepository,
+	private val trackRepository: Lazy<TrackRepository>,
+	private val exploredTileRepository: Lazy<ExploredTileRepository>,
 	private val exploredTilesStateFlow: MutableStateFlow<Set<String>>,
 ) : ViewModel() {
 
@@ -74,11 +77,13 @@ class MapViewModel(
 	}
 
 	init {
-		loadExploredTiles()
+		viewModelScope.launch(Dispatchers.IO) {
+			loadExploredTiles()
+		}
 	}
 
-	private fun loadExploredTiles() {
-		exploredTileRepository.getExploredTileKeys()
+	private suspend fun loadExploredTiles() {
+		exploredTileRepository.value.getExploredTileKeys()
 			.onEach { tiles ->
 				val previousSize = _state.value.exploredTiles.size
 				_state.update { it.copy(exploredTiles = tiles) }
@@ -210,7 +215,7 @@ class MapViewModel(
 			}
 
 			tileMutex.withLock {
-				exploredTileRepository.markTilesExplored(exploredTiles)
+				exploredTileRepository.value.markTilesExplored(exploredTiles)
 			}
 		}
 	}
@@ -229,7 +234,7 @@ class MapViewModel(
 				val duration = (endTime - trackStartTime) / 1000
 
 				val trackName = "Track ${TimeUtils.formatDateTime(trackStartTime)}"
-				val trackId = trackRepository.createTrack(trackName)
+				val trackId = trackRepository.value.createTrack(trackName)
 
 				val trackPoints = points.mapIndexed { index, location ->
 					TrackPoint(
@@ -238,16 +243,24 @@ class MapViewModel(
 						timestamp = trackStartTime + (index * 3000L)
 					) to index
 				}
-				trackRepository.addTrackPoints(trackId, trackPoints)
+				trackRepository.value.addTrackPoints(trackId, trackPoints)
 
-				trackRepository.finishTrack(
+				trackRepository.value.finishTrack(
 					trackId = trackId,
 					endTime = endTime,
 					distanceMeters = distance,
 					durationSeconds = duration
 				)
 
-				_events.trySend(MapEvent.ShowSnackbar("Track saved: ${TimeUtils.formatDistance(distance)}"))
+				_events.trySend(
+					MapEvent.ShowSnackbar(
+						"Track saved: ${
+							FormatUtils.formatDistance(
+								distance
+							)
+						}"
+					)
+				)
 			}
 		}
 
