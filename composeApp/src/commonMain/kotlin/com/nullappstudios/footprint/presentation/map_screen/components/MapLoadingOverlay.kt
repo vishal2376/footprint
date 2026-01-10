@@ -9,6 +9,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -26,9 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.nullappstudios.footprint.presentation.theme.primary
 
@@ -41,34 +42,57 @@ fun MapLoadingOverlay(visible: Boolean) {
 	) {
 		val infiniteTransition = rememberInfiniteTransition(label = "loading")
 
-		val rotation by infiniteTransition.animateFloat(
+		// Radar Ring 1
+		val ring1Scale by infiniteTransition.animateFloat(
 			initialValue = 0f,
-			targetValue = 360f,
+			targetValue = 1f,
 			animationSpec = infiniteRepeatable(
-				animation = tween(3000, easing = LinearEasing),
+				animation = tween(2000, easing = LinearEasing),
 				repeatMode = RepeatMode.Restart
 			),
-			label = "rotation"
+			label = "ring1"
 		)
 
-		val scale by infiniteTransition.animateFloat(
+		val ring1Alpha by infiniteTransition.animateFloat(
 			initialValue = 0.8f,
-			targetValue = 1.2f,
+			targetValue = 0f,
+			animationSpec = infiniteRepeatable(
+				animation = tween(2000, easing = LinearEasing),
+				repeatMode = RepeatMode.Restart
+			),
+			label = "ring1Alpha"
+		)
+
+		// Radar Ring 2 (Offset)
+		val ring2Scale by infiniteTransition.animateFloat(
+			initialValue = 0f,
+			targetValue = 1f,
+			animationSpec = infiniteRepeatable(
+				animation = tween(2000, delayMillis = 600, easing = LinearEasing),
+				repeatMode = RepeatMode.Restart
+			),
+			label = "ring2"
+		)
+
+		val ring2Alpha by infiniteTransition.animateFloat(
+			initialValue = 0.8f,
+			targetValue = 0f,
+			animationSpec = infiniteRepeatable(
+				animation = tween(2000, delayMillis = 600, easing = LinearEasing),
+				repeatMode = RepeatMode.Restart
+			),
+			label = "ring2Alpha"
+		)
+
+		// Icon Bounce
+		val bounceOffset by infiniteTransition.animateFloat(
+			initialValue = 0f,
+			targetValue = -10f,
 			animationSpec = infiniteRepeatable(
 				animation = tween(1000, easing = LinearEasing),
 				repeatMode = RepeatMode.Reverse
 			),
-			label = "scale"
-		)
-
-		val alpha by infiniteTransition.animateFloat(
-			initialValue = 0.4f,
-			targetValue = 1f,
-			animationSpec = infiniteRepeatable(
-				animation = tween(800, easing = LinearEasing),
-				repeatMode = RepeatMode.Reverse
-			),
-			label = "alpha"
+			label = "bounce"
 		)
 
 		Box(
@@ -81,21 +105,45 @@ fun MapLoadingOverlay(visible: Boolean) {
 				horizontalAlignment = Alignment.CenterHorizontally,
 				verticalArrangement = Arrangement.Center
 			) {
-				Icon(
-					imageVector = Icons.Filled.LocationOn,
-					contentDescription = "Finding location",
-					modifier = Modifier
-						.size(72.dp)
-						.rotate(rotation)
-						.scale(scale)
-						.alpha(alpha),
-					tint = primary
-				)
+				// Group Radar and Icon together to ensure concentricity
+				Box(
+					modifier = Modifier.size(200.dp), // Fixed size to contain the radar rings
+					contentAlignment = Alignment.Center
+				) {
+					// Radar Rings
+					Canvas(modifier = Modifier.fillMaxSize()) {
+						// Ring 1
+						val radius1 = size.minDimension / 2 * ring1Scale
+						drawCircle(
+							color = primary.copy(alpha = ring1Alpha),
+							radius = radius1,
+							style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+						)
 
-				Spacer(modifier = Modifier.height(24.dp))
+						// Ring 2
+						val radius2 = size.minDimension / 2 * ring2Scale
+						drawCircle(
+							color = primary.copy(alpha = ring2Alpha),
+							radius = radius2,
+							style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+						)
+					}
+
+					// Icon centered in the radar
+					Icon(
+						imageVector = Icons.Filled.LocationOn,
+						contentDescription = "Finding location",
+						modifier = Modifier
+							.size(48.dp)
+							.offset(y = bounceOffset.dp),
+						tint = primary
+					)
+				}
+
+				Spacer(modifier = Modifier.height(16.dp))
 
 				Text(
-					text = "Finding your location...",
+					text = "Acquiring Signal...",
 					style = MaterialTheme.typography.bodyLarge,
 					color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
 				)
