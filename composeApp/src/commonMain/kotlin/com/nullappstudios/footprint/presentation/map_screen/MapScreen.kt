@@ -58,17 +58,6 @@ fun MapScreen(
 	val scope = rememberCoroutineScope()
 	var showPermissionRequest by remember { mutableStateOf(false) }
 
-	// Stop and save tracking when leaving screen
-	val currentIsTracking = rememberUpdatedState(state.isTracking)
-	val currentViewModel = rememberUpdatedState(viewModel)
-	DisposableEffect(Unit) {
-		onDispose {
-			if (currentIsTracking.value) {
-				currentViewModel.value.onAction(MapAction.ToggleTracking)
-			}
-		}
-	}
-
 	// Auto-start tracking when screen opens
 	LaunchedEffect(Unit) {
 		viewModel.onAction(MapAction.ToggleTracking)
@@ -150,7 +139,10 @@ fun MapScreen(
 		state = state,
 		mapComposeState = viewModel.mapComposeState,
 		snackbarHostState = snackbarHostState,
-		onBackClick = onNavigateBack,
+		onBackClick = {
+			viewModel.onAction(MapAction.ToggleTracking)
+			onNavigateBack()
+		},
 		onCompassClick = {
 			scope.launch { viewModel.mapComposeState.rotateTo(0f) }
 		},

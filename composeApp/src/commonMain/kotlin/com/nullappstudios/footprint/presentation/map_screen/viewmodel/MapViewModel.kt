@@ -101,7 +101,7 @@ class MapViewModel(
 		// Cancel pending reload and schedule new one (debounce 500ms)
 		reloadJob?.cancel()
 		reloadJob = viewModelScope.launch {
-			delay(500)
+			delay(1000)
 			mapComposeState.reloadTiles()
 		}
 	}
