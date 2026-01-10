@@ -59,7 +59,6 @@ fun HomeScreen(
 					.weight(1f)
 					.verticalScroll(rememberScrollState())
 			) {
-				// Header
 				Text(
 					text = "Footprint",
 					style = MaterialTheme.typography.headlineLarge,
@@ -74,21 +73,13 @@ fun HomeScreen(
 
 				Spacer(modifier = Modifier.height(24.dp))
 
-				// Bento Grid with stats
 				BentoGrid(state = state)
 			}
 
-			// Bottom CTA Button
 			ExploreButton(
 				onClick = { viewModel.onAction(HomeAction.NavigateToMap) },
 				modifier = Modifier.padding(top = 16.dp)
 			)
 		}
 	}
-}
-
-// Preview
-@Composable
-fun HomeScreenPreview() {
-	// Preview would require mock ViewModel
 }

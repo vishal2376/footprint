@@ -176,7 +176,6 @@ class MapViewModel(
 						)
 					}
 
-					// Only explore if we moved to a NEW tile
 					markTileExploredIfNew(location)
 				}
 		}
