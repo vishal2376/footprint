@@ -9,19 +9,16 @@ import kotlinx.io.Buffer
 import kotlinx.io.RawSource
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 
-/**
- * TileStreamProvider that only returns tiles for explored areas.
- * Unexplored tiles return null (blank/no tile).
- */
 class FoggedTileStreamProvider(
 	private val httpClient: HttpClient,
 	private val exploredTilesFlow: StateFlow<Set<String>>,
 ) : TileStreamProvider {
 
 	override suspend fun getTileStream(row: Int, col: Int, zoomLvl: Int): RawSource? {
-		// Check if this tile is explored (avoid string operations)
+		// Check if this tile is explored
 		if (!isTileExplored(col, row, zoomLvl)) {
-			return null
+			val tileBytes = generateMysteryTile(col, row, zoomLvl, gridSize = 4)
+			return Buffer().apply { write(tileBytes) }
 		}
 
 		return try {

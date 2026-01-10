@@ -31,7 +31,7 @@ fun ExploreButton(
 ) {
 	Box(
 		modifier = modifier
-			.fillMaxWidth()
+			.fillMaxWidth(0.7f)
 			.height(56.dp)
 			.clip(RoundedCornerShape(16.dp))
 			.background(Brush.linearGradient(GradientHero))

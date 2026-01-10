@@ -51,7 +51,7 @@ fun HomeScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(padding)
-				.padding(horizontal = 8.dp, vertical = 16.dp),
+				.padding(16.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Column(

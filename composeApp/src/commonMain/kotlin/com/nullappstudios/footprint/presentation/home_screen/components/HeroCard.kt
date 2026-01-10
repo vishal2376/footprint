@@ -219,13 +219,13 @@ fun HeroCard(
 				} else {
 					Column {
 						Text(
-							text = "$tilesExplored tiles discovered",
+							text = "No adventures yet",
 							style = MaterialTheme.typography.titleMedium,
 							fontWeight = FontWeight.SemiBold,
 							color = AccentBlue
 						)
 						Text(
-							text = "Start your first adventure!",
+							text = "Start exploring to track your journey!",
 							style = MaterialTheme.typography.bodySmall,
 							color = Color.White.copy(alpha = 0.6f)
 						)
