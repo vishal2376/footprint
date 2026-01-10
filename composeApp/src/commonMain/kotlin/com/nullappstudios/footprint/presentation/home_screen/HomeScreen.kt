@@ -27,9 +27,6 @@ import com.nullappstudios.footprint.presentation.home_screen.viewmodel.HomeViewM
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
-/**
- * Home screen displaying exploration stats and CTA to start exploring.
- */
 @Composable
 fun HomeScreen(
 	onNavigateToMap: () -> Unit,
