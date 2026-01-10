@@ -12,7 +12,7 @@ fun MapEventsEffect(
 	events: Flow<MapEvent>,
 	snackbarHostState: SnackbarHostState,
 	onNavigateBack: () -> Unit,
-	onShowPermissionRequest: () -> Unit
+	onShowPermissionRequest: () -> Unit,
 ) {
 	LaunchedEffect(Unit) {
 		events.collectLatest { event ->

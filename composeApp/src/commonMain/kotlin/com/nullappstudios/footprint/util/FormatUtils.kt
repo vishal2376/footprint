@@ -62,11 +62,13 @@ object FormatUtils {
 				val k = number / 100 / 10.0
 				"${k}k"
 			}
+
 			number < 1_000_000 -> "${number / 1_000}k"
 			number < 10_000_000 -> {
 				val m = number / 100_000 / 10.0
 				"${m}m"
 			}
+
 			number < 1_000_000_000 -> "${number / 1_000_000}m"
 			else -> {
 				val b = number / 100_000_000 / 10.0

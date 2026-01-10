@@ -1,8 +1,8 @@
 package com.nullappstudios.footprint.data.local.entity
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 
 @Entity(
 	tableName = "tracks",

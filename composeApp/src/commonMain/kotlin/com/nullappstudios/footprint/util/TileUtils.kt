@@ -38,7 +38,8 @@ object TileUtils {
 		val n = 1 shl zoom // 2^zoom
 		val x = floor((lon + 180.0) / 360.0 * n).toInt()
 		val latRad = lat * PI / 180.0
-		val y = floor((1.0 - ln(tan(latRad) + 1.0 / kotlin.math.cos(latRad)) / PI) / 2.0 * n).toInt()
+		val y =
+			floor((1.0 - ln(tan(latRad) + 1.0 / kotlin.math.cos(latRad)) / PI) / 2.0 * n).toInt()
 
 		return TileKey(
 			x = x.coerceIn(0, n - 1),

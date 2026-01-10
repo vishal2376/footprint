@@ -73,4 +73,11 @@ val presentationModule = module {
 	}
 }
 
-val appModules = listOf(platformModule, networkModule, databaseModule, dataModule, domainModule, presentationModule)
+val appModules = listOf(
+	platformModule,
+	networkModule,
+	databaseModule,
+	dataModule,
+	domainModule,
+	presentationModule
+)

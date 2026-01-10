@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,7 +34,7 @@ fun StatCard(
 	title: String,
 	value: String,
 	subtitle: String,
-	gradient: List<Color>
+	gradient: List<Color>,
 ) {
 	val gradientBrush = Brush.linearGradient(gradient)
 

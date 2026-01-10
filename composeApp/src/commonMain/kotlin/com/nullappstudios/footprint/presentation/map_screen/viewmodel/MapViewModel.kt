@@ -15,6 +15,8 @@ import com.nullappstudios.footprint.presentation.map_screen.state.MapState
 import com.nullappstudios.footprint.util.FormatUtils
 import com.nullappstudios.footprint.util.TileUtils
 import com.nullappstudios.footprint.util.TimeUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -40,8 +42,6 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import ovh.plrapps.mapcompose.ui.state.MapState as MapComposeState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 
 class MapViewModel(
 	private val getLiveLocationUseCase: GetLiveLocationUseCase,
@@ -110,10 +110,14 @@ class MapViewModel(
 		when (action) {
 			MapAction.ToggleTracking -> handleToggleTracking()
 			MapAction.ToggleFollowLocation -> handleToggleFollow()
-			MapAction.ResetRotation -> { /* Handled in UI via mapComposeState */ }
+			MapAction.ResetRotation -> { /* Handled in UI via mapComposeState */
+			}
+
 			MapAction.RequestPermission -> _events.trySend(MapEvent.RequestLocationPermission)
 			MapAction.PermissionGranted -> handlePermissionGranted()
-			MapAction.PermissionDenied -> { /* No-op */ }
+			MapAction.PermissionDenied -> { /* No-op */
+			}
+
 			MapAction.NavigateBack -> _events.trySend(MapEvent.NavigateBack)
 		}
 	}

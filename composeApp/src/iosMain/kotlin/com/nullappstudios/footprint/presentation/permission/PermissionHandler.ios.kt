@@ -9,7 +9,7 @@ class IOSPermissionHandler : PermissionHandler {
 		onPermissionGranted: () -> Unit,
 		onPermissionDenied: () -> Unit,
 		rationaleContent: @Composable (onRequestPermission: () -> Unit) -> Unit,
-    ) {
+	) {
 		// iOS handles permission dialogs natively via CLLocationManager
 		// Permission is requested when startUpdatingLocation() is called
 		onPermissionGranted()

@@ -6,9 +6,9 @@ import com.nullappstudios.footprint.data.local.entity.TrackPointEntity
 import com.nullappstudios.footprint.domain.model.Track
 import com.nullappstudios.footprint.domain.model.TrackPoint
 import com.nullappstudios.footprint.domain.repository.TrackRepository
+import com.nullappstudios.footprint.util.TimeUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import com.nullappstudios.footprint.util.TimeUtils
 
 class TrackRepositoryImpl(
 	private val trackDao: TrackDao,

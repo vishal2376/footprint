@@ -18,9 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.GpsOff
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.LocationSearching
-import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +32,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp

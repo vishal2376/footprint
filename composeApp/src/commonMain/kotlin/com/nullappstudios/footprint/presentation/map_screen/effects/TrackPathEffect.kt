@@ -13,7 +13,7 @@ import ovh.plrapps.mapcompose.ui.state.MapState
 @Composable
 fun TrackPathEffect(
 	trackPoints: List<Location>,
-	mapState: MapState
+	mapState: MapState,
 ) {
 	LaunchedEffect(trackPoints) {
 		if (trackPoints.size >= 2) {

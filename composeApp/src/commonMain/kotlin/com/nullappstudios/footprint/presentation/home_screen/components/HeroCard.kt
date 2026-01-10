@@ -33,8 +33,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nullappstudios.footprint.presentation.theme.AccentBlue
-import com.nullappstudios.footprint.presentation.theme.AccentGreen
-import com.nullappstudios.footprint.presentation.theme.AccentPink
 import com.nullappstudios.footprint.presentation.theme.GradientHero
 import com.nullappstudios.footprint.util.FormatUtils
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -44,7 +42,7 @@ private const val TOTAL_WORLD_TILES = 274_877_906_944L
 @Composable
 fun HeroCard(
 	tilesExplored: Int,
-	lastActivityTime: Long?
+	lastActivityTime: Long?,
 ) {
 	val worldPercentage = (tilesExplored.toDouble() / TOTAL_WORLD_TILES * 100)
 	val formattedPercentage = if (worldPercentage < 0.0001) {
@@ -197,7 +195,7 @@ fun HeroCard(
 					}
 				}
 
-	if (lastActivityTime != null) {
+				if (lastActivityTime != null) {
 					Row(
 						modifier = Modifier.fillMaxWidth(),
 						horizontalArrangement = Arrangement.SpaceBetween

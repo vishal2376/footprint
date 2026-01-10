@@ -7,7 +7,13 @@ import kotlinx.coroutines.flow.Flow
 interface TrackRepository {
 	suspend fun createTrack(name: String): Long
 	suspend fun updateTrack(track: Track)
-	suspend fun finishTrack(trackId: Long, endTime: Long, distanceMeters: Double, durationSeconds: Long)
+	suspend fun finishTrack(
+		trackId: Long,
+		endTime: Long,
+		distanceMeters: Double,
+		durationSeconds: Long,
+	)
+
 	suspend fun addTrackPoint(trackId: Long, point: TrackPoint, orderIndex: Int)
 	suspend fun addTrackPoints(trackId: Long, points: List<Pair<TrackPoint, Int>>)
 	fun getAllTracks(): Flow<List<Track>>
