@@ -75,7 +75,7 @@ actual fun generateMysteryTile(
 		}
 
 		val textPaint = Paint().apply {
-			color = "#181823".toColorInt()
+			color = "#3A3A3D".toColorInt()
 			textSize = 80f * gridSize * zoomScale
 			textAlign = Paint.Align.CENTER
 			isAntiAlias = true

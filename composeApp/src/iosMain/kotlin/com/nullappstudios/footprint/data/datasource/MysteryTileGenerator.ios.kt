@@ -98,7 +98,7 @@ actual fun generateMysteryTile(
 		// Text color #999999
 		val text = "?" as NSString
 		val font = UIFont.systemFontOfSize(fontSize)
-		val textColor = UIColor.colorWithRed(0.094, 0.094, 0.137, alpha = 1.0)
+		val textColor = UIColor.colorWithRed(0.265, 0.265, 0.239, alpha = 1.0)
 
 		@Suppress("UNCHECKED_CAST")
 		val attributes = mapOf<Any?, Any?>(
