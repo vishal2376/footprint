@@ -34,6 +34,7 @@
 - [License](#license)
 
 
+<a id="motivation"></a>
 ## 💡 Motivation
 
 Living in Bangalore, I often find myself taking evening walks through the city's countless lanes and neighborhoods. One day, while exploring a new area, I realized I had no idea how much of my own city I had actually seen. That thought stuck with me.
@@ -42,7 +43,7 @@ I started wondering, what if there was a way to visualize my explorations? Not j
 
 That's how **Footprint** was born, a companion app that turns everyday walks into an exploration game. Every street you walk, every neighborhood you visit, gets permanently "unlocked" on your personal map. The unexplored areas remain hidden behind mysterious tiles, waiting to be discovered.
 
-
+<a id="screenshots"></a>
 ## 📱 Screenshots ([Watch Demo Video](https://drive.google.com/drive/folders/1Qpe-PFNxcqEVTbmN_LPca10kRPZ72_lr?usp=drive_link))
 
 <br/>
@@ -54,6 +55,7 @@ That's how **Footprint** was born, a companion app that turns everyday walks int
   <img src="assets/screenshots/4.png" width="200"/>
 </p>
 
+<a id="features"></a>
 ## ✨ Features
 
 
@@ -78,6 +80,7 @@ That's how **Footprint** was born, a companion app that turns everyday walks int
 #### Gamified Experience
 - The mystery tiles create curiosity. The stats create motivation. Every walk becomes a small adventure.
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
 Footprint follows **Clean Architecture** principles with clear separation between layers:
@@ -142,6 +145,7 @@ composeApp/
 ```
 
 
+<a id="technical-details"></a>
 ## 🔧 Technical Details
 
 ### Libraries & Technologies
@@ -179,6 +183,7 @@ composeApp/
 - WAL mode enabled for Room database
 
 
+<a id="how-to-run"></a>
 ## 🚀 How to Run
 
 ### Prerequisites
@@ -211,6 +216,7 @@ cd footprint
 3. Click **Run**
 
 
+<a id="future-roadmap"></a>
 ## 🏁 Future Roadmap
 
 - [ ] **Offline Maps** — Download tiles for offline exploration
@@ -220,6 +226,7 @@ cd footprint
 - [ ] **Social Sharing** — Share exploration stats with friends
 
 
+<a id="license"></a>
 ## 🔒 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
