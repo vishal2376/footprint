@@ -44,10 +44,10 @@ That's how **Footprint** was born, a companion app that turns everyday walks int
 <br/>
 
 <p align="center">
-  <img src="assets/screenshots/home_screen.png" width="200" alt="Home Screen"/>
-  <img src="assets/screenshots/map_screen.png" width="200" alt="Map Screen"/>
-  <img src="assets/screenshots/tracking.png" width="200" alt="Tracking"/>
-  <img src="assets/screenshots/mystery_tiles.png" width="200" alt="Mystery Tiles"/>
+  <img src="assets/screenshots/1.png" width="200"/>
+  <img src="assets/screenshots/2.png" width="200"/>
+  <img src="assets/screenshots/3.png" width="200"/>
+  <img src="assets/screenshots/4.png" width="200"/>
 </p>
 
 ## ✨ Features
