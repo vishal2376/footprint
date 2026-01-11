@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/footprint_logo.png" width="150px" />
+<img width="128" height="128" src="https://github.com/user-attachments/assets/c4379707-8a29-4220-8c8a-9a8089f22309" />
 
 **Footprint** is a kotlin multiplatform app that turns everyday walks into an exploration game. Every street you walk, every neighborhood you visit, gets permanently "unlocked" on your personal map.
 
@@ -13,8 +13,14 @@
 </div>
 
 <br/>
-<br/>
 
+<div align="center">
+
+### [ [Watch Demo Video](https://drive.google.com/drive/folders/1Qpe-PFNxcqEVTbmN_LPca10kRPZ72_lr?usp=drive_link) ]
+
+</div>
+
+<br/>
 
 ## 🏁 Table of Contents
 
@@ -37,9 +43,7 @@ I started wondering, what if there was a way to visualize my explorations? Not j
 That's how **Footprint** was born, a companion app that turns everyday walks into an exploration game. Every street you walk, every neighborhood you visit, gets permanently "unlocked" on your personal map. The unexplored areas remain hidden behind mysterious tiles, waiting to be discovered.
 
 
-## 📱 Screenshots
-
-🎬 **[Watch Demo Video](#)** *(Coming Soon)*
+## 📱 Screenshots ([Watch Demo Video](https://drive.google.com/drive/folders/1Qpe-PFNxcqEVTbmN_LPca10kRPZ72_lr?usp=drive_link))
 
 <br/>
 
